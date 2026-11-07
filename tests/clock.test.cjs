@@ -280,8 +280,9 @@ test('number-position setting moves only the large hour labels and persists sepa
   assert.equal(app.storage.position, 'start');
   assert.equal(loadClock({ storedNumberPosition: 'middle' }).node('number-position').value, 'middle');
   assert.equal(loadClock({ storedNumberPosition: 'start' }).node('number-position').value, 'start');
-  assert.equal(loadClock({ storedNumberPosition: 'invalid' }).node('number-position').value, 'middle');
-  assert.equal(loadClock().node('number-position').value, 'middle');
+  assert.equal(loadClock({ storedNumberPosition: 'invalid' }).node('number-position').value, 'start');
+  assert.equal(loadClock().node('number-position').value, 'start');
+  assert.equal(loadClock({ storageBlocked: true }).node('number-position').value, 'start');
 });
 
 test('read-aloud uses the selected language, device voice, and displayed time', () => {

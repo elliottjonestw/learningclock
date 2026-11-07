@@ -102,7 +102,7 @@ const translations = {
 };
 const browserLanguage = navigator.language || navigator.languages?.[0] || 'en';
 let language = /^(zh|cmn|yue)(?:[-_]|$)/i.test(browserLanguage) ? 'zh-Hant' : 'en';
-let numberPosition = 'middle';
+let numberPosition = 'start';
 try {
   const savedLanguage = localStorage.getItem('clock-language');
   if (Object.hasOwn(translations, savedLanguage)) language = savedLanguage;
@@ -167,7 +167,7 @@ function syncMinuteNumberMask() {
 }
 
 function setNumberPosition(position) {
-  numberPosition = position === 'start' ? 'start' : 'middle';
+  numberPosition = position === 'middle' ? 'middle' : 'start';
   const labels = document.getElementById('hour-labels').children;
   for (let hour = 0; hour < 12; hour++) {
     const [x, y] = point(236, hour * 30 + (numberPosition === 'middle' ? 15 : 0));

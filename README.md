@@ -38,7 +38,7 @@ See [GitHub's Pages publishing instructions](https://docs.github.com/en/pages/ge
 - English and Traditional Chinese controls. On the first visit, a Chinese browser language chooses Chinese; other languages choose English. An explicit saved choice takes priority on later visits.
 - Read time aloud speaks just the displayed time in English or Mandarin Chinese to match the selected language, without an introductory phrase. It includes seconds when the seconds hand is enabled and reads paused/random times as displayed. Uses the browser's speech synthesis and available device voices.
 - Voice selection prefers voices named Premium, Natural, Neural, Enhanced, or Google when available, at the voice's normal speed and pitch. A Voice selector lets you choose separately for English and Chinese, with both choices remembered. Available voices refresh when the browser loads them; Cantonese voices are excluded from Mandarin reading.
-- Hour numbers can sit at the start or middle of each colored section; this preference is also saved locally.
+- Hour numbers default to the start of each colored section, with a middle-of-section option. This preference is saved locally and takes priority on later visits.
 - Minute hand movement defaults to Jumps (exact minute marks, advancing at second zero), with a saved Smooth option alongside the hour-number setting.
 - 12-hour face, an inner ring of dots, all 60 minutes, and colored five-minute markers.
 - Correct hand positions, with the hour hand moving gradually and the minute hand following the chosen movement setting. No digital answer.
