@@ -4,6 +4,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 // The color at 12 o'clock starts a rainbow that runs clockwise around the face.
 const palette = ['#cb5c52','#d68b47','#d6ad47','#dfcd5b','#a6bc69','#699b75','#79aeb7','#5d95b7','#686d9e','#9a7da6','#bd92b0','#dca1aa'];
 const ink = ['#a94037','#a85e2a','#a47e26','#a59b32','#789344','#487b56','#4b828e','#3e7395','#505580','#7d6088','#a16f91','#b57882'];
+const hourButtons = [];
 
 function point(radius, degrees) {
   const angle = degrees * Math.PI / 180;
@@ -34,8 +35,17 @@ function drawFace() {
     // Each color covers the five minutes after its hour marker (12: 0–5).
     sectors.append(svgElement('path', { d: ringSector(angle, angle + 30, 184, 291), fill: palette[hour], stroke: '#f8f0df', 'stroke-width': 4, 'stroke-linejoin': 'round' }));
     const [x, y] = point(236, angle);
-    hourLabels.append(svgElement('circle', { cx: x, cy: y, r: 35, fill: '#fff9eb' }));
-    hourLabels.append(svgElement('text', { class: 'hour-digit', x, y, fill: ink[hour], 'font-size': 48, 'font-weight': 650 }, hour || 12));
+    const button = svgElement('circle', { class: 'hour-button', cx: x, cy: y, r: 35, fill: '#fff9eb', role: 'button', tabindex: 0 });
+    button.addEventListener('click', () => setPracticeTime(hour || 12, 0));
+    button.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setPracticeTime(hour || 12, 0);
+      }
+    });
+    hourButtons.push({ button, hour: hour || 12 });
+    hourLabels.append(button);
+    hourLabels.append(svgElement('text', { class: 'hour-digit', x, y, fill: ink[hour], 'font-size': 48, 'font-weight': 650, 'aria-hidden': 'true' }, hour || 12));
   }
 
   for (let minute = 0; minute < 60; minute++) {
@@ -56,6 +66,9 @@ const translations = {
   en: {
     title: 'Learning clock', language: 'Language', current: 'Set to current time',
     random: 'Set to random time', showHands: 'Show hands', hour: 'Hour hand', minute: 'Minute hand',
+    timeHour: 'Hour', timeMinute: 'Minute', applyTime: 'Set time',
+    setHour: hour => `Set to ${hour} o’clock`,
+    customTimeHint: 'Choose an hour from 1 to 12. Setting a time pauses the clock.',
     second: 'Seconds hand', handsShown: names => `Shown hands: ${names.join(', ')}.`,
     runClock: 'Run clock', running: 'Clock running', paused: 'Clock paused',
     readTime: 'Read time aloud', reading: 'Reading…', speechUnsupported: 'Reading aloud is unavailable in this browser.',
@@ -70,6 +83,9 @@ const translations = {
   'zh-Hant': {
     title: '學習時鐘', language: '語言', current: '設為目前時間',
     random: '設為隨機時間', showHands: '顯示指針', hour: '時針', minute: '分針',
+    timeHour: '時', timeMinute: '分', applyTime: '設定時間',
+    setHour: hour => `設為 ${hour} 點整`,
+    customTimeHint: '請選擇 1 到 12 時。設定時間後，時鐘會暫停。',
     second: '秒針', handsShown: names => `顯示指針：${names.join('、')}。`,
     runClock: '啟用時鐘走動', running: '時鐘走動中', paused: '時鐘已暫停',
     readTime: '朗讀時間', reading: '朗讀中…', speechUnsupported: '此瀏覽器不支援語音朗讀。',
@@ -385,6 +401,7 @@ function setLanguage(nextLanguage) {
   document.querySelectorAll('[data-language]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.language === language));
   });
+  hourButtons.forEach(({ button, hour }) => button.setAttribute('aria-label', text.setHour(hour)));
   try { localStorage.setItem('clock-language', language); } catch { /* Optional preference. */ }
   updateSpeechControl();
   updateVoiceOptions();
@@ -408,6 +425,37 @@ document.getElementById('random-button').addEventListener('click', () => {
   live = false;
   anchorPracticeTime();
   updateHands();
+});
+
+function setPracticeTime(hour, minute) {
+  displayedMinutes = (hour % 12) * 60 + minute;
+  displayedSeconds = 0;
+  document.getElementById('custom-hour').value = String(hour);
+  document.getElementById('custom-minute').value = String(minute);
+  live = false;
+  running = false;
+  anchorPracticeTime();
+  saveSettings();
+  if (speechSupported) {
+    activeSpeech = null;
+    window.speechSynthesis.cancel();
+    speechError = '';
+    updateSpeechControl();
+  }
+  updateHands();
+}
+
+document.getElementById('custom-time-form').addEventListener('submit', event => {
+  event.preventDefault();
+  const hourInput = document.getElementById('custom-hour');
+  const minuteInput = document.getElementById('custom-minute');
+  const hour = Number(hourInput.value);
+  const minute = Number(minuteInput.value);
+  // Native form validation provides feedback; also guard the clock's state here.
+  if (!hourInput.value.trim() || !minuteInput.value.trim() ||
+      !Number.isInteger(hour) || hour < 1 || hour > 12 ||
+      !Number.isInteger(minute) || minute < 0 || minute > 59) return;
+  setPracticeTime(hour, minute);
 });
 
 document.getElementById('running-button').addEventListener('click', () => {

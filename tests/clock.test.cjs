@@ -30,7 +30,7 @@ function loadClock({ storedLanguage = null, storedNumberPosition = null, storedS
   const languageButtons = ['en', 'zh-Hant'].map(language => {
     const button = element(); button.dataset.language = language; return button;
   });
-  const labels = ['current', 'random', 'showHands', 'hour', 'minute', 'numberPosition', 'numberStart', 'numberMiddle', 'second', 'minuteMotion', 'minuteJumps', 'minuteSmooth'].map(key => {
+  const labels = ['current', 'random', 'showHands', 'hour', 'minute', 'numberPosition', 'numberStart', 'numberMiddle', 'second', 'minuteMotion', 'minuteJumps', 'minuteSmooth', 'timeHour', 'timeMinute', 'applyTime', 'customTimeHint'].map(key => {
     const label = element(); label.dataset.i18n = key; return label;
   });
   const callbacks = {};
@@ -79,6 +79,14 @@ function loadClock({ storedLanguage = null, storedNumberPosition = null, storedS
   vm.runInContext(source, context);
   const angle = id => Number(node(id).attributes.transform.match(/rotate\(([\d.]+)/)[1]);
   return { node, clock, document, labels, languageButtons, storage, callbacks, angle, speech };
+}
+
+function submitTime(app, hour, minute) {
+  app.node('custom-hour').value = String(hour);
+  app.node('custom-minute').value = String(minute);
+  let prevented = false;
+  app.node('custom-time-form').listeners.submit({ preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
 }
 
 test('color sections begin at the hour markers and cover the following five minutes', () => {
@@ -147,7 +155,7 @@ test('language switch translates the controls and preserves time and visibility'
   app.languageButtons[1].click();
   assert.equal(app.document.documentElement.lang, 'zh-Hant');
   assert.equal(app.document.title, '學習時鐘');
-  assert.deepEqual(app.labels.map(label => label.textContent), ['設為目前時間', '設為隨機時間', '顯示指針', '時針', '分針', '數字位置', '區段起點', '區段中央', '秒針', '分針走法', '跳動', '平滑移動']);
+  assert.deepEqual(app.labels.map(label => label.textContent), ['設為目前時間', '設為隨機時間', '顯示指針', '時針', '分針', '數字位置', '區段起點', '區段中央', '秒針', '分針走法', '跳動', '平滑移動', '時', '分', '設定時間', '請選擇 1 到 12 時。設定時間後，時鐘會暫停。']);
   assert.equal(app.languageButtons[1].attributes['aria-pressed'], 'true');
   assert.equal(app.node('hour-hand').style.display, 'none');
   assert.equal(app.angle('hour-hand'), original);
@@ -488,4 +496,117 @@ test('smooth minute motion can be selected, stays accurate while paused, and is 
   assert.equal(app.angle('minute-hand'), 180);
   assert.equal(JSON.parse(app.storage.settings).minuteMotion, 'jumps');
   assert.equal(loadClock({ storedSettings: '{"minuteMotion":"invalid"}' }).node('minute-motion').value, 'jumps');
+});
+
+test('custom time sets the hands, pauses for practice, and resumes from the chosen time', () => {
+  const app = loadClock();
+  submitTime(app, 8, '05');
+  assert.equal(app.angle('hour-hand'), 242.5);
+  assert.equal(app.angle('minute-hand'), 30);
+  assert.equal(app.angle('second-hand'), 0);
+  assert.equal(app.node('running-button').attributes['aria-checked'], 'false');
+  assert.equal(JSON.parse(app.storage.settings).running, false);
+  app.clock.now += 60000;
+  app.callbacks.tick();
+  app.callbacks.visibilitychange();
+  assert.equal(app.angle('minute-hand'), 30);
+  app.node('read-button').click();
+  assert.equal(app.speech.utterances.at(-1).text, 'eight oh five.');
+  app.languageButtons[1].click();
+  app.node('read-button').click();
+  assert.equal(app.speech.utterances.at(-1).text, '八點五分。');
+  app.node('running-button').click();
+  app.clock.now += 61000;
+  app.callbacks.tick();
+  assert.equal(app.angle('minute-hand'), 36);
+  assert.equal(app.angle('second-hand'), 6);
+  app.clock.hours = 14; app.clock.minutes = 20; app.clock.seconds = 0;
+  app.node('current-button').click();
+  assert.equal(app.angle('hour-hand'), 70);
+  assert.equal(app.angle('minute-hand'), 120);
+});
+
+test('custom time resets seconds, preserves hidden hands, and wraps correctly past twelve', () => {
+  const app = loadClock();
+  app.node('show-second').checked = true;
+  app.clock.seconds = 59;
+  app.callbacks.tick();
+  submitTime(app, 11, 59);
+  assert.equal(app.angle('minute-hand'), 354);
+  assert.equal(app.angle('second-hand'), 0);
+  app.node('running-button').click();
+  app.clock.now += 60000;
+  app.callbacks.tick();
+  assert.deepEqual(['hour-hand', 'minute-hand', 'second-hand'].map(app.angle), [0, 0, 0]);
+  submitTime(app, 12, 0);
+  assert.deepEqual(['hour-hand', 'minute-hand', 'second-hand'].map(app.angle), [0, 0, 0]);
+  const hourToggle = app.node('show-hour');
+  hourToggle.checked = false;
+  hourToggle.listeners.change({ target: hourToggle });
+  app.node('show-second').checked = false;
+  submitTime(app, 1, 0);
+  assert.deepEqual(['hour-hand', 'minute-hand', 'second-hand'].map(app.angle), [30, 0, 0]);
+  assert.equal(app.node('hour-hand').style.display, 'none');
+  assert.equal(app.node('second-hand').style.display, 'none');
+  assert.equal(app.node('clock-description').textContent, 'A colorful learning clock. Only the minute hand is shown.');
+});
+
+test('invalid custom times leave the displayed time and running state unchanged', () => {
+  const app = loadClock();
+  app.node('show-second').checked = true;
+  const original = ['hour-hand', 'minute-hand', 'second-hand'].map(app.angle);
+  for (const values of [
+    ['', 0], [0, 0], [13, 0], [1.5, 0], ['abc', 0],
+    [1, ''], [1, -1], [1, 60], [1, 1.5],
+  ]) {
+    submitTime(app, ...values);
+    assert.deepEqual(['hour-hand', 'minute-hand', 'second-hand'].map(app.angle), original);
+    assert.equal(app.node('running-button').attributes['aria-checked'], 'true');
+  }
+});
+
+
+test('each hour number sets that exact hour and pauses in both number positions', () => {
+  for (const storedNumberPosition of ['start', 'middle']) {
+    const app = loadClock({ storedNumberPosition });
+    const labels = app.node('hour-labels').children;
+    for (let hour = 0; hour < 12; hour++) {
+      app.node('current-button').click();
+      const button = labels[hour * 2];
+      assert.equal(button.attributes.role, 'button');
+      assert.equal(button.attributes.tabindex, '0');
+      assert.equal(button.attributes['aria-label'], `Set to ${hour || 12} o’clock`);
+      button.click();
+      assert.deepEqual(['hour-hand', 'minute-hand', 'second-hand'].map(app.angle), [hour * 30, 0, 0]);
+      assert.equal(app.node('custom-hour').value, String(hour || 12));
+      assert.equal(app.node('custom-minute').value, '0');
+      assert.equal(app.node('running-button').attributes['aria-checked'], 'false');
+      app.clock.now += 61000;
+      app.callbacks.tick();
+      assert.equal(app.angle('hour-hand'), hour * 30);
+    }
+    app.languageButtons[1].click();
+    assert.equal(labels[6].attributes['aria-label'], '設為 3 點整');
+    labels[6].click();
+    app.node('read-button').click();
+    assert.equal(app.speech.utterances.at(-1).text, '三點整。');
+  }
+});
+
+test('hour numbers support Enter and Space and resume from the selected hour', () => {
+  const app = loadClock();
+  const labels = app.node('hour-labels').children;
+  for (const [hour, key] of [[9, 'Enter'], [12, ' ']]) {
+    let prevented = false;
+    labels[(hour % 12) * 2].listeners.keydown({ key, preventDefault() { prevented = true; } });
+    assert.equal(prevented, true);
+    assert.equal(app.angle('hour-hand'), (hour % 12) * 30);
+  }
+  labels[6].listeners.keydown({ key: 'Tab', preventDefault() { assert.fail('Tab should navigate normally'); } });
+  assert.equal(app.angle('hour-hand'), 0);
+  app.node('running-button').click();
+  app.clock.now += 60000;
+  app.callbacks.tick();
+  assert.equal(app.angle('minute-hand'), 6);
+  assert.equal(app.angle('hour-hand'), 0.5);
 });

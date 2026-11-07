@@ -19,7 +19,7 @@
 
     <section class="clock-section" aria-label="Learning clock">
       <div class="clock-wrap">
-        <svg id="clock" class="clock" viewBox="0 0 700 700" role="img" aria-labelledby="clock-title clock-description">
+        <svg id="clock" class="clock" viewBox="0 0 700 700" role="group" aria-labelledby="clock-title clock-description">
           <title id="clock-title">Learning clock</title>
           <desc id="clock-description">A colorful clock with hour and minute hands.</desc>
           <defs>
@@ -39,7 +39,7 @@
           <circle cx="350" cy="350" r="330" fill="url(#face-paper)" stroke="#fff8e9" stroke-width="2"/>
           <g id="sectors"></g>
           <g id="ticks"></g>
-          <g id="minute-labels"></g>
+          <g id="minute-labels" aria-hidden="true"></g>
           <g id="hour-labels"></g>
           <g id="inner-labels"></g>
           <g id="hands">
@@ -61,8 +61,16 @@
         <div class="actions">
           <button id="current-button" class="button button-current" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span data-i18n="current">Set to current time</span></button>
           <button id="random-button" class="button button-random" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h3c4 0 8 12 12 12h3M17 14l4 4-4 4M3 18h3c1.5 0 3-1.7 4.5-4M14 9c1.5-2 2.6-3 4-3h3M17 2l4 4-4 4"/></svg><span data-i18n="random">Set to random time</span></button>
-          <button id="read-button" class="button button-random" type="button" aria-describedby="speech-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4V4Z M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14"/></svg><span id="read-label">Read time aloud</span></button>
         </div>
+        <form id="custom-time-form" class="custom-time-form" aria-describedby="custom-time-hint">
+          <div class="time-fields">
+            <label for="custom-hour"><span data-i18n="timeHour">Hour</span><input id="custom-hour" type="number" inputmode="numeric" min="1" max="12" step="1" value="12" required></label>
+            <label for="custom-minute"><span data-i18n="timeMinute">Minute</span><input id="custom-minute" type="number" inputmode="numeric" min="0" max="59" step="1" value="0" required></label>
+          </div>
+          <button class="button button-current" type="submit" data-i18n="applyTime">Set time</button>
+          <p id="custom-time-hint" class="sr-only" data-i18n="customTimeHint">Choose an hour from 1 to 12. Setting a time pauses the clock.</p>
+        </form>
+        <button id="read-button" class="button button-random" type="button" aria-describedby="speech-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4V4Z M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14"/></svg><span id="read-label">Read time aloud</span></button>
         <p id="speech-status" class="speech-status" role="status"></p>
         <fieldset class="hand-options">
           <legend class="sr-only" data-i18n="showHands">Show hands</legend>

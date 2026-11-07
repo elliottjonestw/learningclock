@@ -29,6 +29,8 @@ See [GitHub's Pages publishing instructions](https://docs.github.com/en/pages/ge
 - Shows the browser's current local time on load and keeps it up to date.
 - Current time button returns to live time.
 - Random time button chooses another time for practice.
+- A compact, always-visible row lets you enter the hour (1–12) and minute (0–59), with seconds reset to zero. Set time applies the chosen time and pauses the clock for practice; the running switch resumes from that time.
+- Click or tap an hour number to set that exact hour (for example, 3 sets 3:00) and pause for practice. Hour numbers also work with Tab, Enter, and Space.
 - Separate checkboxes show or hide each hand.
 - Optional seconds hand, hidden on the first visit.
 - Running/paused button, enabled on the first visit, controls all hands for both current and random times. Resume continues from the paused time; current time resets to the browser's local time.
@@ -47,6 +49,6 @@ The browser app is in `dist/`; no build step is required.
 
 ## Verify
 
-Run `node --test tests/clock.test.cjs`. The checks cover every minute on the clock face, live/practice behavior, and language switching.
+Run `node --test tests/clock.test.cjs`. The checks cover every minute on the clock face, live/practice behavior, custom time entry, and language switching.
 
 Responsive browser checks cover 320×568, 390×844, 430×932, 768×1024, 844×390, and 1280×800 viewports, including English and Traditional Chinese labels. Verify native speech voices separately on the target device.
