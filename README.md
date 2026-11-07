@@ -8,6 +8,22 @@ From this directory, run `python3 -m http.server 4173 --directory dist` and open
 
 You can also open `dist/index.html` directly in a browser. All assets and fonts work offline.
 
+## Publish on GitHub Pages
+
+The repository includes a GitHub Actions workflow in `.github/workflows/pages.yml` that tests the clock and publishes the contents of `dist/`. No build step, dependency installation, or custom secrets are needed.
+
+1. Push this repository, including the workflow, to the `main` branch on GitHub.
+2. In the GitHub repository, open **Settings → Pages**.
+3. Under **Build and deployment → Source**, select **GitHub Actions**. The workflow publishes `dist/` directly; there is no branch or folder to select in Pages settings.
+4. Open **Actions → Deploy to GitHub Pages → Run workflow**, choose `main`, and run it. This also handles the initial push occurring before Pages was enabled.
+5. Once the workflow succeeds, the published URL appears in **Settings → Pages** and in the workflow's deployment environment. For a project repository named `learningclock`, it will normally be `https://<owner>.github.io/learningclock/`.
+
+Every later push to `main` runs the tests and deploys the site automatically. If a test fails, that run stops before deployment. If you rename the branch, update `on.push.branches` in the workflow to match.
+
+The app uses relative asset paths, so it works at a repository URL such as `/learningclock/` as well as at the root of a user site or custom domain.
+
+See [GitHub's Pages publishing instructions](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) for the repository settings.
+
 ## Features
 
 - Shows the browser's current local time on load and keeps it up to date.
