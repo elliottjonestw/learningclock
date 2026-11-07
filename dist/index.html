@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#faf7f0">
+  <meta name="description" content="A rainbow learning clock. Explore hours and minutes, try a random time, and learn one hand at a time.">
+  <title>Learning clock</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./clock.js" defer></script>
+</head>
+<body>
+  <main>
+    <div class="language-switch" role="group" aria-label="Language">
+      <button type="button" data-language="en" lang="en" aria-pressed="true">English</button>
+      <button type="button" data-language="zh-Hant" lang="zh-Hant" aria-pressed="false">中文</button>
+    </div>
+
+    <section class="clock-section" aria-label="Learning clock">
+      <div class="clock-wrap">
+        <svg id="clock" class="clock" viewBox="0 0 700 700" role="img" aria-labelledby="clock-title clock-description">
+          <title id="clock-title">Learning clock</title>
+          <desc id="clock-description">A colorful clock with hour and minute hands.</desc>
+          <defs>
+            <mask id="minute-number-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="700" height="700" style="mask-type:luminance">
+              <rect width="700" height="700" fill="white"/>
+              <g id="minute-mask-digits"></g>
+            </mask>
+            <radialGradient id="face-paper" cx="40%" cy="32%" r="80%"><stop stop-color="#fffcf2"/><stop offset="1" stop-color="#f2e8d4"/></radialGradient>
+            <linearGradient id="rim" x1="0" x2="0.7" y2="1"><stop stop-color="#e1ccb0"/><stop offset=".45" stop-color="#f5e8d0"/><stop offset="1" stop-color="#d8bf99"/></linearGradient>
+            <linearGradient id="hour-fill" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#df893d"/><stop offset=".5" stop-color="#f2a34d"/><stop offset="1" stop-color="#dc8134"/></linearGradient>
+            <linearGradient id="minute-fill" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#e6b849"/><stop offset=".5" stop-color="#f5d36c"/><stop offset="1" stop-color="#e8ba4b"/></linearGradient>
+            <radialGradient id="pin"><stop stop-color="#fff8e9"/><stop offset=".8" stop-color="#dfc6a0"/><stop offset="1" stop-color="#bca17a"/></radialGradient>
+            <filter id="hand-shadow" x="-80%" y="-30%" width="260%" height="170%"><feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#755231" flood-opacity=".22"/></filter>
+          </defs>
+          <circle cx="350" cy="353" r="338" fill="#d5bd9b"/>
+          <circle cx="350" cy="350" r="338" fill="url(#rim)" stroke="#d9c4a4" stroke-width="1"/>
+          <circle cx="350" cy="350" r="330" fill="url(#face-paper)" stroke="#fff8e9" stroke-width="2"/>
+          <g id="sectors"></g>
+          <g id="ticks"></g>
+          <g id="minute-labels"></g>
+          <g id="hour-labels"></g>
+          <g id="inner-labels"></g>
+          <g id="hands">
+            <g mask="url(#minute-number-mask)">
+              <g id="minute-hand" filter="url(#hand-shadow)"><path d="M338 380 L337 127 L320 127 Q316 127 319 121 L346 79 Q350 73 354 79 L381 121 Q384 127 380 127 L363 127 L362 380 Q350 392 338 380Z" fill="url(#minute-fill)" stroke="#dab046" stroke-width="2"/><path d="M341 125V369" stroke="#fff0ac" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/></g>
+            </g>
+            <g id="hour-hand" filter="url(#hand-shadow)"><path d="M334 380 L332 215 L316 215 Q312 215 315 209 L345 169 Q350 162 355 169 L385 209 Q388 215 384 215 L368 215 L366 380 Q350 395 334 380Z" fill="url(#hour-fill)" stroke="#c67b35" stroke-width="2"/><path d="M337 215V366" stroke="#ffca83" stroke-opacity=".65" stroke-width="2" stroke-linecap="round"/></g>
+            <g id="second-hand" style="display:none">
+              <path d="M350 390V78" fill="none" stroke="#b95e54" stroke-width="3.5" stroke-linecap="round"/>
+              <circle cx="350" cy="391" r="7" fill="#fff9eb" stroke="#b95e54" stroke-width="3"/>
+            </g>
+          </g>
+          <circle cx="350" cy="350" r="24" fill="#cfaa75" opacity=".24"/>
+          <circle cx="350" cy="350" r="19" fill="url(#pin)" stroke="#bca17a" stroke-width="1.5"/>
+          <circle cx="350" cy="350" r="7" fill="#b69a74"/>
+        </svg>
+      </div>
+      <div class="control-panel">
+        <div class="actions">
+          <button id="current-button" class="button button-current" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg><span data-i18n="current">Set to current time</span></button>
+          <button id="random-button" class="button button-random" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h3c4 0 8 12 12 12h3M17 14l4 4-4 4M3 18h3c1.5 0 3-1.7 4.5-4M14 9c1.5-2 2.6-3 4-3h3M17 2l4 4-4 4"/></svg><span data-i18n="random">Set to random time</span></button>
+          <button id="read-button" class="button button-random" type="button" aria-describedby="speech-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4V4Z M15 8a6 6 0 0 1 0 8 M18 5a10 10 0 0 1 0 14"/></svg><span id="read-label">Read time aloud</span></button>
+        </div>
+        <p id="speech-status" class="speech-status" role="status"></p>
+        <fieldset class="hand-options">
+          <legend class="sr-only" data-i18n="showHands">Show hands</legend>
+          <label class="hand-option hour-option"><input id="show-hour" type="checkbox" checked><span class="checkmark" aria-hidden="true"></span><span class="hand-swatch hour-swatch" aria-hidden="true"></span><span data-i18n="hour">Hour hand</span></label>
+          <label class="hand-option minute-option"><input id="show-minute" type="checkbox" checked><span class="checkmark" aria-hidden="true"></span><span class="hand-swatch minute-swatch" aria-hidden="true"></span><span data-i18n="minute">Minute hand</span></label>
+          <label class="hand-option second-option"><input id="show-second" type="checkbox"><span class="checkmark" aria-hidden="true"></span><span class="hand-swatch second-swatch" aria-hidden="true"></span><span data-i18n="second">Seconds hand</span></label>
+        </fieldset>
+        <div class="run-setting">
+          <button id="running-button" class="running-button" type="button" role="switch" aria-checked="true" aria-label="Run clock">
+            <span class="running-track" aria-hidden="true"><span></span></span>
+            <span id="running-label">Clock running</span>
+          </button>
+        </div>
+        <div class="face-settings">
+          <label class="number-setting" for="number-position">
+            <span data-i18n="numberPosition">Hour numbers</span>
+            <select id="number-position">
+              <option value="middle" data-i18n="numberMiddle">Middle of section</option>
+              <option value="start" data-i18n="numberStart">Start of section</option>
+            </select>
+          </label>
+          <label class="number-setting" for="minute-motion">
+            <span data-i18n="minuteMotion">Minute hand</span>
+            <select id="minute-motion">
+              <option value="jumps" data-i18n="minuteJumps">Jumps</option>
+              <option value="smooth" data-i18n="minuteSmooth">Smooth</option>
+            </select>
+          </label>
+        </div>
+        <label class="number-setting voice-setting" for="voice-choice">
+          <span id="voice-label">Voice</span>
+          <select id="voice-choice"><option value="">Automatic</option></select>
+        </label>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

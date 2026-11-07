@@ -1,0 +1,8 @@
+.DS_Store
+.openai/.sites-*
+node_modules/
+*.tar.gz
+*.tgz
+
+# Local setup history and generated previews
+.local-backup/
