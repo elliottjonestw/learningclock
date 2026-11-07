@@ -3,7 +3,6 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 // The color at 12 o'clock starts a rainbow that runs clockwise around the face.
 const palette = ['#cb5c52','#d68b47','#d6ad47','#dfcd5b','#a6bc69','#699b75','#79aeb7','#5d95b7','#686d9e','#9a7da6','#bd92b0','#dca1aa'];
-const ink = ['#a94037','#a85e2a','#a47e26','#a59b32','#789344','#487b56','#4b828e','#3e7395','#505580','#7d6088','#a16f91','#b57882'];
 const hourButtons = [];
 
 function point(radius, degrees) {
@@ -35,7 +34,7 @@ function drawFace() {
     // Each color covers the five minutes after its hour marker (12: 0–5).
     sectors.append(svgElement('path', { d: ringSector(angle, angle + 30, 184, 291), fill: palette[hour], stroke: '#f8f0df', 'stroke-width': 4, 'stroke-linejoin': 'round' }));
     const [x, y] = point(236, angle);
-    const button = svgElement('circle', { class: 'hour-button', cx: x, cy: y, r: 35, fill: '#fff9eb', role: 'button', tabindex: 0 });
+    const button = svgElement('circle', { class: 'hour-button', cx: x, cy: y, r: 35, fill: palette[hour], role: 'button', tabindex: 0 });
     button.addEventListener('click', () => setPracticeTime(hour || 12, 0));
     button.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -43,9 +42,12 @@ function drawFace() {
         setPracticeTime(hour || 12, 0);
       }
     });
-    hourButtons.push({ button, hour: hour || 12 });
+    // The counterclockwise half overlaps the preceding hour's color.
+    const outline = svgElement('path', { d: 'M0,-35 A35,35 0 0 0 0,35', fill: 'none', stroke: '#fff9eb', 'stroke-width': 2 });
+    document.getElementById('hour-outlines').append(outline);
+    hourButtons.push({ button, hour: hour || 12, outline });
     hourLabels.append(button);
-    hourLabels.append(svgElement('text', { class: 'hour-digit', x, y, fill: ink[hour], 'font-size': 48, 'font-weight': 650, 'aria-hidden': 'true' }, hour || 12));
+    hourLabels.append(svgElement('text', { class: 'hour-digit', x, y, fill: '#fffbee', 'font-size': 48, 'font-weight': 650, 'aria-hidden': 'true' }, hour || 12));
   }
 
   for (let minute = 0; minute < 60; minute++) {
@@ -173,6 +175,9 @@ function setNumberPosition(position) {
     labels[hour * 2].setAttribute('cy', y);
     labels[hour * 2 + 1].setAttribute('x', x);
     labels[hour * 2 + 1].setAttribute('y', y);
+    const outline = hourButtons[hour].outline;
+    outline.setAttribute('transform', `translate(${x} ${y}) rotate(${hour * 30})`);
+    outline.style.display = numberPosition === 'start' ? '' : 'none';
   }
   document.getElementById('number-position').value = numberPosition;
   syncMinuteNumberMask();

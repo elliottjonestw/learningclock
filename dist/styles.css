@@ -52,7 +52,8 @@ main {
 .clock .hour-digit, .clock .circled-minute { dominant-baseline: alphabetic; font-variant-numeric: normal; }
 .hour-button { cursor: pointer; touch-action: manipulation; }
 .hour-button:focus-visible { outline: none; stroke: #506346; stroke-width: 4; }
-.hour-button:hover { fill: #fffdf8; }
+.hour-button:hover { filter: brightness(1.08); }
+#hour-labels .hour-digit { paint-order: stroke; stroke: #51452c70; stroke-width: 1.5; stroke-linejoin: round; }
 .clock .hour-digit, #hands { pointer-events: none; }
 .control-panel { width: min(640px, 100%); min-width: 0; margin: 22px auto 0; }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
